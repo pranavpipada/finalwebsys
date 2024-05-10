@@ -16,18 +16,11 @@ class Customer(BaseModel):
     name: str
     phone: str
 
-
-
 class Order(BaseModel):
     cust_id: int
     notes: str
     items: List[int]  # Automatically generate timestamp
 
-
-
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
-import sqlite3
 
 # Initialize FastAPI app
 app = FastAPI()
@@ -36,25 +29,6 @@ app = FastAPI()
 conn = sqlite3.connect('db.sqlite')
 conn.row_factory = sqlite3.Row
 cursor = conn.cursor()
-
-
-# Pydantic models for request and response bodies
-class Customer(BaseModel):
-    name: str
-    phone: str
-
-
-class Item(BaseModel):
-    name: str
-    price: float
-
-
-class Order(BaseModel):
-    timestamp: int
-    name: str
-    phone: str
-    items: list[Item]
-    notes: str = ""
 
 
 # Routes
@@ -86,45 +60,6 @@ async def update_customer(customer_id: int, customer: Customer):
     cursor.execute("UPDATE customers SET name=?, phone=? WHERE id=?", (customer.name, customer.phone, customer_id))
     conn.commit()
     return {"message": "Customer updated successfully"}
-
-
-# Similarly implement endpoints for items and orders
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=8000)
-
-
-# Routes for Customers
-@app.post("/customers")
-async def create_customer(customer: Customer):
-    cursor.execute("INSERT INTO customers(name, phone) VALUES(?,?)", (customer.name, customer.phone))
-    conn.commit()
-    return {"message": "Customer created successfully"}
-
-
-@app.get("/customers/{customer_id}")
-async def read_customer(customer_id: int):
-    cursor.execute("SELECT * FROM customers WHERE id = ?", (customer_id,))
-    customer = cursor.fetchone()
-    if not customer:
-        raise HTTPException(status_code=404, detail="Customer not found")
-    return dict(customer)
-
-
-@app.delete("/customers/{customer_id}")
-async def delete_customer(customer_id: int):
-    cursor.execute("DELETE FROM customers WHERE id = ?", (customer_id,))
-    conn.commit()
-    return {"message": "Customer deleted successfully"}
-
-
-@app.put("/customers/{customer_id}")
-async def update_customer(customer_id: int, customer: Customer):
-    cursor.execute("UPDATE customers SET name=?, phone=? WHERE id=?", (customer.name, customer.phone, customer_id))
-    conn.commit()
-    return {"message": "Customer updated successfully"}
-
 
 # Routes for Items
 @app.post("/items")
